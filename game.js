@@ -135,7 +135,8 @@ const ENEMY_H = 24;
 const ENEMY_PAD_X = 16;
 const ENEMY_PAD_Y = 14;
 // Blue/purple palette matching the screenshot
-const ENEMY_COLORS = ['#00ffaa', '#00ffaa', '#00ddff', '#00ddff', '#ff44cc'];
+// Row colors: cyber eagles (gold), war eagles (dark gold), chainsaw humans (orange-red)
+const ENEMY_COLORS = ['#ffcc00', '#ffcc00', '#ff8800', '#ff8800', '#ff3300'];
 const ENEMY_POINTS = [30, 30, 20, 20, 10];
 
 function createEnemies(rows, cols, startY, xOffset) {
@@ -486,35 +487,35 @@ function update(delta) {
   checkCollisions();
 }
 
-// ─── Pixel art sprites — Techno Rabbits (9×6 grid at 4px = 36×24) ────────────
+// ─── Pixel art sprites (9×6 grid at 4px = 36×24) ─────────────────────────────
 const S = 4;
 const SPRITES = {
-  // Top rows (30pts) — small speedy techno rabbit, tall thin ears
+  // Top rows (30pts) — Cyber Eagle Scout: wings spread, sharp beak, visor
   A: [
-    [0,1,0,0,0,0,0,1,0],
-    [0,1,0,0,0,0,0,1,0],
+    [1,0,0,0,0,0,0,0,1],
+    [1,1,0,0,1,0,0,1,1],
+    [1,1,1,0,1,0,1,1,1],
     [0,1,1,1,1,1,1,1,0],
-    [0,0,1,1,0,1,1,0,0],
-    [0,1,0,0,1,0,0,1,0],
-    [1,0,1,0,0,0,1,0,1],
+    [0,0,1,0,1,0,1,0,0],
+    [0,0,0,1,0,1,0,0,0],
   ],
-  // Middle rows (20pts) — cyber rabbit, wider ears, circuit details
+  // Middle rows (20pts) — War Eagle: armoured chest, laser talons
   B: [
     [1,0,1,0,0,0,1,0,1],
-    [1,1,1,0,0,0,1,1,1],
+    [1,1,1,0,1,0,1,1,1],
     [1,1,1,1,1,1,1,1,1],
-    [1,0,0,1,0,1,0,0,1],
     [0,1,1,0,1,0,1,1,0],
+    [0,1,0,1,1,1,0,1,0],
     [1,0,0,1,0,1,0,0,1],
   ],
-  // Bottom rows (10pts) — big armoured rabbit, stubby ears, heavy body
+  // Bottom rows (10pts) — Chainsaw Human on jetpack
   C: [
-    [0,0,1,0,0,0,1,0,0],
-    [0,1,1,0,0,0,1,1,0],
-    [1,1,1,1,1,1,1,1,1],
-    [1,0,1,0,1,0,1,0,1],
-    [1,1,0,1,1,1,0,1,1],
-    [0,1,0,1,0,1,0,1,0],
+    [0,0,0,1,1,1,0,0,0],
+    [0,0,1,1,1,1,1,0,0],
+    [1,1,1,0,1,0,0,0,0],
+    [0,1,1,1,1,1,1,1,0],
+    [0,0,1,0,1,0,1,0,0],
+    [0,1,0,0,0,0,0,1,0],
   ],
 };
 
@@ -534,109 +535,108 @@ function drawPlayer() {
 
   ctx.save();
 
-  // Engine thrust glow
+  // Engine thrust glow (green jungle exhaust)
   const grd = ctx.createRadialGradient(cx, y + h + 2, 0, cx, y + h + 2, 14);
-  grd.addColorStop(0,   'rgba(255, 140, 200, 0.95)');
-  grd.addColorStop(0.4, 'rgba(200, 60, 180, 0.5)');
-  grd.addColorStop(1,   'rgba(150, 0, 150, 0)');
+  grd.addColorStop(0,   'rgba(100, 255, 120, 0.95)');
+  grd.addColorStop(0.4, 'rgba(30, 180, 60, 0.5)');
+  grd.addColorStop(1,   'rgba(0, 100, 0, 0)');
   ctx.fillStyle = grd;
   ctx.beginPath();
   ctx.ellipse(cx, y + h + 5, 7, 12, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Wings (warm grey with stripe)
-  ctx.fillStyle = '#5a4a6a';
+  // Long sloth claw-arms as wings (brown)
+  ctx.fillStyle = '#6b4c2a';
+  // Left claw-arm
   ctx.beginPath();
-  ctx.moveTo(cx - 6, y + h * 0.55);
-  ctx.lineTo(x,      y + h * 0.78);
-  ctx.lineTo(x,      y + h);
+  ctx.moveTo(cx - 8, y + h * 0.45);
+  ctx.lineTo(x - 4,  y + h * 0.6);
+  ctx.lineTo(x - 2,  y + h * 0.75);
   ctx.lineTo(cx - 6, y + h);
   ctx.closePath();
   ctx.fill();
+  // Right claw-arm
   ctx.beginPath();
-  ctx.moveTo(cx + 6, y + h * 0.55);
-  ctx.lineTo(x + w,  y + h * 0.78);
-  ctx.lineTo(x + w,  y + h);
+  ctx.moveTo(cx + 8, y + h * 0.45);
+  ctx.lineTo(x + w + 4, y + h * 0.6);
+  ctx.lineTo(x + w + 2, y + h * 0.75);
   ctx.lineTo(cx + 6, y + h);
   ctx.closePath();
   ctx.fill();
+  // Claw tips (left)
+  ctx.fillStyle = '#3a2010';
+  ctx.fillRect(x - 4, y + h * 0.68, 3, 2);
+  ctx.fillRect(x - 2, y + h * 0.73, 3, 2);
+  // Claw tips (right)
+  ctx.fillRect(x + w + 2, y + h * 0.68, 3, 2);
+  ctx.fillRect(x + w,     y + h * 0.73, 3, 2);
 
-  // Wing stripes (tabby marking)
-  ctx.strokeStyle = '#aa88cc';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(cx - 7, y + h * 0.66); ctx.lineTo(x + 5, y + h * 0.93); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx + 7, y + h * 0.66); ctx.lineTo(x + w - 5, y + h * 0.93); ctx.stroke();
-
-  // Main hull (soft cream/orange cat colour)
-  ctx.fillStyle = '#e8c890';
+  // Main rocket body (mossy green)
+  ctx.fillStyle = '#4a7a3a';
   ctx.beginPath();
-  ctx.moveTo(cx - 7, y + h * 0.18);  // left base of left ear
-  ctx.lineTo(cx - 5, y);              // left ear tip
-  ctx.lineTo(cx - 2, y + h * 0.22);  // between ears dip (left)
-  ctx.lineTo(cx,     y + h * 0.18);  // between ears centre peak
-  ctx.lineTo(cx + 2, y + h * 0.22);  // between ears dip (right)
-  ctx.lineTo(cx + 5, y);              // right ear tip
-  ctx.lineTo(cx + 7, y + h * 0.18);  // right base of right ear
-  ctx.lineTo(cx + 9, y + h * 0.5);   // right shoulder
+  ctx.moveTo(cx,     y + 2);          // nose tip
+  ctx.lineTo(cx + 9, y + h * 0.45);  // right shoulder
   ctx.lineTo(cx + 9, y + h);         // right base
   ctx.lineTo(cx - 9, y + h);         // left base
-  ctx.lineTo(cx - 9, y + h * 0.5);   // left shoulder
+  ctx.lineTo(cx - 9, y + h * 0.45);  // left shoulder
   ctx.closePath();
   ctx.fill();
 
-  // Inner ear colour (pink)
-  ctx.fillStyle = '#f09090';
+  // Body stripe (lighter green)
+  ctx.fillStyle = '#6aaa55';
   ctx.beginPath();
-  ctx.moveTo(cx - 6,   y + h * 0.2);
-  ctx.lineTo(cx - 4.8, y + h * 0.04);
-  ctx.lineTo(cx - 3,   y + h * 0.22);
-  ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(cx + 6,   y + h * 0.2);
-  ctx.lineTo(cx + 4.8, y + h * 0.04);
-  ctx.lineTo(cx + 3,   y + h * 0.22);
+  ctx.moveTo(cx,     y + 4);
+  ctx.lineTo(cx + 4, y + h * 0.42);
+  ctx.lineTo(cx - 4, y + h * 0.42);
   ctx.closePath();
   ctx.fill();
 
-  // Cat face (on cockpit area)
-  // Face circle
-  ctx.fillStyle = '#f5dfa0';
+  // Sloth face cockpit (round, cream)
+  ctx.fillStyle = '#d4b483';
   ctx.beginPath();
-  ctx.ellipse(cx, y + h * 0.54, 7, 7, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, y + h * 0.62, 8, 8, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Eyes (big anime cat eyes)
-  ctx.fillStyle = '#1a1a2e';
-  ctx.beginPath(); ctx.ellipse(cx - 3, y + h * 0.50, 2, 2.5, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx + 3, y + h * 0.50, 2, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+  // Sloth mask (dark patches around eyes)
+  ctx.fillStyle = '#7a5535';
+  ctx.beginPath(); ctx.ellipse(cx - 3, y + h * 0.58, 3, 2.5, -0.3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + 3, y + h * 0.58, 3, 2.5,  0.3, 0, Math.PI * 2); ctx.fill();
+
+  // Sleepy half-closed eyes
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.ellipse(cx - 3, y + h * 0.58, 1.8, 1.2, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + 3, y + h * 0.58, 1.8, 1.2, 0, 0, Math.PI * 2); ctx.fill();
   // Eye shine
   ctx.fillStyle = '#ffffff';
-  ctx.beginPath(); ctx.arc(cx - 2.2, y + h * 0.47, 0.8, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 3.8, y + h * 0.47, 0.8, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx - 2.3, y + h * 0.555, 0.6, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 3.7, y + h * 0.555, 0.6, 0, Math.PI * 2); ctx.fill();
 
-  // Nose (tiny pink triangle)
-  ctx.fillStyle = '#ff8899';
+  // Sleepy eyelids (half closed)
+  ctx.fillStyle = '#d4b483';
+  ctx.fillRect(cx - 5, y + h * 0.555, 4, 1.5);
+  ctx.fillRect(cx + 1, y + h * 0.555, 4, 1.5);
+
+  // Big round sloth nose
+  ctx.fillStyle = '#8B5E3C';
   ctx.beginPath();
-  ctx.moveTo(cx,     y + h * 0.56);
-  ctx.lineTo(cx - 1, y + h * 0.59);
-  ctx.lineTo(cx + 1, y + h * 0.59);
-  ctx.closePath();
+  ctx.ellipse(cx, y + h * 0.66, 3, 2, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = '#5a3520';
+  ctx.beginPath(); ctx.arc(cx - 1, y + h * 0.66, 0.7, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 1, y + h * 0.66, 0.7, 0, Math.PI * 2); ctx.fill();
 
-  // Whiskers
-  ctx.strokeStyle = '#aaaaaa';
-  ctx.lineWidth = 0.8;
-  ctx.beginPath(); ctx.moveTo(cx - 1, y + h * 0.58); ctx.lineTo(cx - 8, y + h * 0.56); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx - 1, y + h * 0.60); ctx.lineTo(cx - 8, y + h * 0.62); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx + 1, y + h * 0.58); ctx.lineTo(cx + 8, y + h * 0.56); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx + 1, y + h * 0.60); ctx.lineTo(cx + 8, y + h * 0.62); ctx.stroke();
+  // Contented smile
+  ctx.strokeStyle = '#5a3520';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, y + h * 0.67, 2.5, 0.2, Math.PI - 0.2);
+  ctx.stroke();
 
   // Engine nozzles
-  ctx.fillStyle = '#332233';
+  ctx.fillStyle = '#2a3320';
   ctx.fillRect(cx - 8, y + h - 3, 5, 4);
   ctx.fillRect(cx + 3,  y + h - 3, 5, 4);
-  ctx.fillStyle = '#ff88dd';
+  ctx.fillStyle = '#88ff66';
   ctx.fillRect(cx - 7, y + h - 2, 3, 3);
   ctx.fillRect(cx + 4,  y + h - 2, 3, 3);
 
@@ -644,19 +644,20 @@ function drawPlayer() {
 }
 
 function drawMiniShip(x, y) {
-  // Mini cat ship for lives HUD
-  ctx.fillStyle = '#5a4a6a';
-  ctx.fillRect(x, y + 9, 6, 5);
-  ctx.fillRect(x + 10, y + 9, 6, 5);
-  ctx.fillStyle = '#e8c890';
-  ctx.fillRect(x + 5, y + 3, 6, 11);
-  // Ears
-  ctx.fillRect(x + 5, y + 1, 2, 3);
-  ctx.fillRect(x + 9, y + 1, 2, 3);
-  // Face dot
-  ctx.fillStyle = '#1a1a2e';
-  ctx.fillRect(x + 6, y + 6, 1, 2);
-  ctx.fillRect(x + 9, y + 6, 1, 2);
+  // Mini sloth ship for lives HUD — tiny sloth hanging from a branch
+  // Branch
+  ctx.fillStyle = '#6b4c2a';
+  ctx.fillRect(x - 2, y + 2, 20, 3);
+  // Sloth body hanging down
+  ctx.fillStyle = '#7a6040';
+  ctx.fillRect(x + 6, y + 4, 6, 8);
+  // Sloth face
+  ctx.fillStyle = '#d4b483';
+  ctx.beginPath(); ctx.arc(x + 9, y + 5, 3, 0, Math.PI * 2); ctx.fill();
+  // Claws gripping branch
+  ctx.fillStyle = '#3a2010';
+  ctx.fillRect(x + 5,  y + 2, 2, 3);
+  ctx.fillRect(x + 11, y + 2, 2, 3);
 }
 
 function drawEnemies() {
@@ -672,48 +673,59 @@ function drawEnemies() {
 }
 
 function drawUFO() {
+  // Anaconda — MegaCorp's giant robotic snake slithering across the top
   if (!ufo.active) return;
   const { x, y, width: w, height: h } = ufo;
   const cx = x + w / 2;
+  const t = Date.now() * 0.004;
 
-  // Glow
-  const grd = ctx.createRadialGradient(cx, y + h * 0.6, 0, cx, y + h * 0.6, w * 0.6);
-  grd.addColorStop(0,   'rgba(255, 0, 255, 0.3)');
-  grd.addColorStop(1,   'rgba(255, 0, 255, 0)');
-  ctx.fillStyle = grd;
-  ctx.fillRect(x - 8, y, w + 16, h + 4);
+  ctx.save();
 
-  // Saucer body
-  ctx.fillStyle = '#cc00cc';
-  ctx.beginPath();
-  ctx.ellipse(cx, y + h * 0.75, w / 2, h * 0.35, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Body highlight
-  ctx.fillStyle = '#ff44ff';
-  ctx.beginPath();
-  ctx.ellipse(cx, y + h * 0.68, w * 0.35, h * 0.18, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Dome
-  ctx.fillStyle = '#ff00ff';
-  ctx.beginPath();
-  ctx.ellipse(cx, y + h * 0.5, w * 0.28, h * 0.38, 0, Math.PI, 0);
-  ctx.fill();
-
-  // Dome window
-  ctx.fillStyle = '#ffaaff';
-  ctx.beginPath();
-  ctx.ellipse(cx, y + h * 0.42, w * 0.12, h * 0.18, 0, Math.PI, 0);
-  ctx.fill();
-
-  // Lights on underside
-  ctx.fillStyle = '#ffff00';
-  for (let i = -1; i <= 1; i++) {
+  // Body segments (sinuous snake shape)
+  const segCount = 6;
+  const segW = w * 0.55;
+  const segH = h * 0.55;
+  for (let i = segCount; i >= 0; i--) {
+    const sx = x + (i / segCount) * w * 1.2 - w * 0.1;
+    const sy = y + h * 0.5 + Math.sin(t + i * 0.8) * h * 0.35;
+    const shade = i % 2 === 0 ? '#2a8a2a' : '#1a6a1a';
+    ctx.fillStyle = shade;
     ctx.beginPath();
-    ctx.arc(cx + i * w * 0.18, y + h * 0.88, 2, 0, Math.PI * 2);
+    ctx.ellipse(sx, sy, segW * 0.5, segH * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Scale pattern
+    ctx.fillStyle = '#3aaa3a';
+    ctx.beginPath();
+    ctx.ellipse(sx, sy - segH * 0.1, segW * 0.3, segH * 0.25, 0, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // Head (at the front depending on direction)
+  const hx = ufo.direction === 1 ? x + w : x;
+  const hy = y + h * 0.5 + Math.sin(t) * h * 0.35;
+  ctx.fillStyle = '#1a5a1a';
+  ctx.beginPath();
+  ctx.ellipse(hx, hy, w * 0.22, h * 0.45, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Evil eyes
+  const eyeOff = ufo.direction === 1 ? -4 : 4;
+  ctx.fillStyle = '#ff4400';
+  ctx.beginPath(); ctx.arc(hx + eyeOff - 3, hy - 3, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(hx + eyeOff + 3, hy - 3, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffaa00';
+  ctx.beginPath(); ctx.arc(hx + eyeOff - 3, hy - 3, 1.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(hx + eyeOff + 3, hy - 3, 1.2, 0, Math.PI * 2); ctx.fill();
+  // Forked tongue
+  ctx.strokeStyle = '#ff2222';
+  ctx.lineWidth = 1.5;
+  const tongueDir = ufo.direction === 1 ? 1 : -1;
+  ctx.beginPath(); ctx.moveTo(hx + tongueDir * 8, hy + 2);
+  ctx.lineTo(hx + tongueDir * 14, hy);
+  ctx.lineTo(hx + tongueDir * 18, hy - 3); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(hx + tongueDir * 14, hy);
+  ctx.lineTo(hx + tongueDir * 18, hy + 3); ctx.stroke();
+
+  ctx.restore();
 }
 
 // ─── Render ───────────────────────────────────────────────────────────────────
@@ -725,23 +737,31 @@ function render(time) {
   drawStars(time);
 
   if (game.state === 'start') {
-    ctx.fillStyle = '#44aaff';
-    ctx.font = 'bold 56px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('SPACE INVADERS', WIDTH / 2, HEIGHT / 2 - 80);
-    ctx.font = '16px monospace';
-    ctx.fillStyle = '#aaaaaa';
-    ctx.fillText('Arrow keys to move   Space to shoot', WIDTH / 2, HEIGHT / 2);
-    ctx.fillStyle = '#ffaa00';
-    ctx.fillText('Press ENTER to start', WIDTH / 2, HEIGHT / 2 + 40);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#88ff66';
+    ctx.font = 'bold 54px monospace';
+    ctx.fillText('SLOTH SQUADRON', WIDTH / 2, HEIGHT / 2 - 100);
+    ctx.fillStyle = '#ffcc44';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText('MegaCorp is destroying the rainforest!', WIDTH / 2, HEIGHT / 2 - 52);
+    ctx.fillStyle = '#aaddaa';
+    ctx.font = '14px monospace';
+    ctx.fillText('Fight off the Cyber Eagles & Chainsaw Humans', WIDTH / 2, HEIGHT / 2 - 26);
+    ctx.fillText('before they reach the ground.', WIDTH / 2, HEIGHT / 2 - 4);
+    ctx.fillStyle = '#888888';
     ctx.font = '13px monospace';
-    ctx.fillText(`High Score: ${game.highScore}`, WIDTH / 2, HEIGHT / 2 + 90);
+    ctx.fillText('Arrow keys to move   Space to shoot', WIDTH / 2, HEIGHT / 2 + 28);
+    ctx.fillStyle = '#ffaa00';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText('Press ENTER to defend the forest!', WIDTH / 2, HEIGHT / 2 + 60);
+    ctx.fillStyle = '#aaffaa';
+    ctx.font = '13px monospace';
+    ctx.fillText(`High Score: ${game.highScore}`, WIDTH / 2, HEIGHT / 2 + 98);
     return;
   }
 
-  // Ground line (blue-white)
-  ctx.fillStyle = '#4466aa';
+  // Ground line (jungle floor — green)
+  ctx.fillStyle = '#3a6a2a';
   ctx.fillRect(0, player.y + player.height + 6, WIDTH, 2);
 
   drawUFO();
@@ -759,11 +779,11 @@ function render(time) {
     }
   }
 
-  // Player laser beams
+  // Player laser beams (jungle green)
   for (const b of bullets) {
-    ctx.fillStyle = 'rgba(0, 150, 255, 0.25)';
+    ctx.fillStyle = 'rgba(80, 255, 80, 0.2)';
     ctx.fillRect(b.x - 3, b.y, b.width + 6, b.height);
-    ctx.fillStyle = '#aaddff';
+    ctx.fillStyle = '#66ff66';
     ctx.fillRect(b.x, b.y, b.width, b.height);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(b.x + 1, b.y, 1, b.height);
@@ -788,52 +808,60 @@ function render(time) {
   }
 
   // HUD
-  ctx.fillStyle = '#aaddff';
+  ctx.fillStyle = '#aaffaa';
   ctx.font = '14px monospace';
   ctx.textAlign = 'left';
   ctx.fillText(`SCORE: ${game.score}`, 10, 24);
   ctx.textAlign = 'center';
   ctx.fillText(`HI: ${game.highScore}`, WIDTH / 2, 24);
-  ctx.fillText(`LEVEL ${game.level}`, WIDTH / 2, 46);
+  ctx.fillStyle = '#ffcc44';
+  ctx.fillText(`SECTOR ${game.level}`, WIDTH / 2, 46);
+  ctx.fillStyle = '#aaffaa';
   ctx.textAlign = 'right';
-  ctx.fillText('LIVES:', WIDTH - 10 - game.lives * 22, 24);
+  ctx.fillText('SLOTHS:', WIDTH - 14 - game.lives * 22, 24);
   for (let i = 0; i < game.lives; i++) drawMiniShip(WIDTH - 14 - (i + 1) * 22, 10);
 
   if (ufo.active) {
-    ctx.fillStyle = '#ff88ff';
+    ctx.fillStyle = '#88ff44';
     ctx.font = '12px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('??? PTS', 10, 46);
+    ctx.fillText('ANACONDA!', 10, 46);
   }
 
   // Level up banner
   if (game.state === 'levelup') {
-    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.fillStyle = 'rgba(0,20,0,0.75)';
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    ctx.fillStyle = '#ffaa00';
-    ctx.font = 'bold 48px monospace';
+    ctx.fillStyle = '#88ff66';
+    ctx.font = 'bold 44px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('LEVEL CLEAR!', WIDTH / 2, HEIGHT / 2 - 20);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '20px monospace';
-    ctx.fillText(`Get ready for Level ${game.level + 1}...`, WIDTH / 2, HEIGHT / 2 + 30);
+    ctx.fillText('FOREST DEFENDED!', WIDTH / 2, HEIGHT / 2 - 30);
+    ctx.fillStyle = '#ffcc44';
+    ctx.font = '18px monospace';
+    ctx.fillText('The sloths advance deeper into the jungle...', WIDTH / 2, HEIGHT / 2 + 14);
+    ctx.fillStyle = '#aaffaa';
+    ctx.font = '15px monospace';
+    ctx.fillText(`Preparing Sector ${game.level + 1}...`, WIDTH / 2, HEIGHT / 2 + 44);
   }
 
-  // Game over / win overlay
+  // Game over overlay
   if (game.state === 'over') {
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillStyle = 'rgba(10,0,0,0.8)';
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    ctx.fillStyle = '#ff4444';
-    ctx.font = 'bold 52px monospace';
+    ctx.fillStyle = '#ff4422';
+    ctx.font = 'bold 44px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', WIDTH / 2, HEIGHT / 2 - 40);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '20px monospace';
-    ctx.fillText(`Score: ${game.score}   Level: ${game.level}`, WIDTH / 2, HEIGHT / 2 + 10);
-    ctx.fillText(`Best:  ${game.highScore}`, WIDTH / 2, HEIGHT / 2 + 40);
-    ctx.fillStyle = '#ffaa00';
+    ctx.fillText('THE FOREST HAS FALLEN', WIDTH / 2, HEIGHT / 2 - 50);
+    ctx.fillStyle = '#ffaa44';
     ctx.font = '16px monospace';
-    ctx.fillText('Press ENTER to play again', WIDTH / 2, HEIGHT / 2 + 85);
+    ctx.fillText('MegaCorp wins... the chainsaws roar.', WIDTH / 2, HEIGHT / 2 - 10);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '18px monospace';
+    ctx.fillText(`Score: ${game.score}   Sector: ${game.level}`, WIDTH / 2, HEIGHT / 2 + 24);
+    ctx.fillText(`Best: ${game.highScore}`, WIDTH / 2, HEIGHT / 2 + 52);
+    ctx.fillStyle = '#88ff66';
+    ctx.font = 'bold 15px monospace';
+    ctx.fillText('Press ENTER — the sloths will fight again!', WIDTH / 2, HEIGHT / 2 + 88);
   }
 }
 
