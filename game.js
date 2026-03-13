@@ -64,7 +64,102 @@ const player = {
 // ─── Player bullets (array for rapid fire) ────────────────────────────────────
 let bullets = [];
 let fireCooldown = 0;
-const FIRE_COOLDOWN = 380; // ms between shots when holding space
+const BASE_FIRE_COOLDOWN = 380;
+
+// ─── Power-up Leaves ──────────────────────────────────────────────────────────
+const LEAF_TYPES  = ['rapid', 'life', 'shield'];
+const LEAF_COLORS = { rapid: '#44ff66', life: '#ffdd00', shield: '#44aaff' };
+const LEAF_LABELS = { rapid: 'RAPID FIRE!', life: '+1 SLOTH!', shield: 'CANOPY REPAIRED!' };
+const LEAF_SIZE   = 14; // collision radius
+
+let leaves = [];
+let leafSpawnTimer = 18000;
+
+const activePowerup = { type: null, timer: 0 };
+
+function spawnLeaf() {
+  const type = LEAF_TYPES[Math.floor(Math.random() * LEAF_TYPES.length)];
+  leaves.push({
+    x: 50 + Math.random() * (WIDTH - 100),
+    y: 65,
+    type,
+    fallSpeed: 28 + Math.random() * 18,
+    rotation: Math.random() * Math.PI * 2,
+    rotSpeed: (Math.random() - 0.5) * 2.5,
+  });
+}
+
+function applyPowerup(leaf) {
+  if (leaf.type === 'rapid') {
+    activePowerup.type = 'rapid';
+    activePowerup.timer = 10000;
+    addPopup(leaf.x, leaf.y, LEAF_LABELS.rapid);
+  } else if (leaf.type === 'life') {
+    game.lives = Math.min(game.lives + 1, 6);
+    addPopup(leaf.x, leaf.y, LEAF_LABELS.life);
+  } else if (leaf.type === 'shield') {
+    for (const block of shields) {
+      if (block.health > 0 && block.health < 3) block.health = 3;
+      else if (block.health === 0) block.health = 1;
+    }
+    addPopup(leaf.x, leaf.y, LEAF_LABELS.shield);
+  }
+}
+
+function updateLeaves(delta, dt) {
+  // Spawn timer
+  leafSpawnTimer -= delta;
+  if (leafSpawnTimer <= 0) {
+    leafSpawnTimer = 15000 + Math.random() * 12000;
+    spawnLeaf();
+  }
+  // Move leaves
+  for (let i = leaves.length - 1; i >= 0; i--) {
+    const l = leaves[i];
+    l.y += l.fallSpeed * dt;
+    l.x += Math.sin(l.y * 0.025) * 0.9; // gentle sway
+    l.rotation += l.rotSpeed * dt;
+    if (l.y > HEIGHT) leaves.splice(i, 1);
+  }
+  // Tick rapid-fire timer
+  if (activePowerup.type === 'rapid') {
+    activePowerup.timer -= delta;
+    if (activePowerup.timer <= 0) activePowerup.type = null;
+  }
+}
+
+function drawLeaf(lx, ly, rot, type) {
+  ctx.save();
+  ctx.translate(lx, ly);
+  ctx.rotate(rot);
+  const c = LEAF_COLORS[type];
+  // Outer glow
+  ctx.shadowColor = c;
+  ctx.shadowBlur = 10;
+  // Leaf body
+  ctx.fillStyle = c;
+  ctx.beginPath();
+  ctx.moveTo(0, -LEAF_SIZE);
+  ctx.bezierCurveTo( LEAF_SIZE * 0.9, -LEAF_SIZE * 0.6,  LEAF_SIZE * 0.9,  LEAF_SIZE * 0.6, 0,  LEAF_SIZE);
+  ctx.bezierCurveTo(-LEAF_SIZE * 0.9,  LEAF_SIZE * 0.6, -LEAF_SIZE * 0.9, -LEAF_SIZE * 0.6, 0, -LEAF_SIZE);
+  ctx.fill();
+  // Vein
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(0, -LEAF_SIZE * 0.8); ctx.lineTo(0, LEAF_SIZE * 0.8); ctx.stroke();
+  // Side veins
+  ctx.lineWidth = 0.7;
+  ctx.beginPath(); ctx.moveTo(0, -LEAF_SIZE * 0.3); ctx.lineTo( LEAF_SIZE * 0.5,  LEAF_SIZE * 0.1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -LEAF_SIZE * 0.3); ctx.lineTo(-LEAF_SIZE * 0.5,  LEAF_SIZE * 0.1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,  LEAF_SIZE * 0.1); ctx.lineTo( LEAF_SIZE * 0.4,  LEAF_SIZE * 0.4); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,  LEAF_SIZE * 0.1); ctx.lineTo(-LEAF_SIZE * 0.4,  LEAF_SIZE * 0.4); ctx.stroke();
+  ctx.restore();
+}
+
+function drawLeaves() {
+  for (const l of leaves) drawLeaf(l.x, l.y, l.rotation, l.type);
+}
 
 // ─── Starfield ────────────────────────────────────────────────────────────────
 const STARS = Array.from({ length: 120 }, () => ({
@@ -261,9 +356,13 @@ function startLevel(level) {
   player.x = WIDTH / 2 - player.width / 2;
   game.levelFireInterval = cfg.fireInterval;
   enemyFireTimer = cfg.fireInterval;
+  leaves = [];
+  leafSpawnTimer = 18000;
 }
 
 function resetGame() {
+  activePowerup.type = null;
+  activePowerup.timer = 0;
   game.score = 0;
   game.lives = 3;
   game.level = 1;
@@ -278,7 +377,7 @@ function shoot() {
     y: player.y,
     width: 3, height: 18, speed: 520,
   });
-  fireCooldown = FIRE_COOLDOWN;
+  fireCooldown = activePowerup.type === 'rapid' ? 100 : BASE_FIRE_COOLDOWN;
 }
 
 // ─── UFO ──────────────────────────────────────────────────────────────────────
@@ -347,6 +446,22 @@ function enemyShoot(dt) {
 
 // ─── Collisions ───────────────────────────────────────────────────────────────
 function checkCollisions() {
+  // Player bullets vs leaves (power-ups)
+  for (let bi = bullets.length - 1; bi >= 0; bi--) {
+    const b = bullets[bi];
+    for (let li = leaves.length - 1; li >= 0; li--) {
+      const l = leaves[li];
+      const dx = b.x - l.x, dy = b.y - l.y;
+      if (Math.sqrt(dx * dx + dy * dy) < LEAF_SIZE) {
+        applyPowerup(l);
+        addExplosion(l.x, l.y);
+        leaves.splice(li, 1);
+        bullets.splice(bi, 1);
+        break;
+      }
+    }
+  }
+
   // Player bullets vs shields, UFO, enemies
   for (let bi = bullets.length - 1; bi >= 0; bi--) {
     const b = bullets[bi];
@@ -476,6 +591,7 @@ function update(delta) {
   updateEnemies(delta);
   enemyShoot(dt);
   updateUFO(delta, dt);
+  updateLeaves(delta, dt);
   updateExplosions(delta);
 
   for (let i = popups.length - 1; i >= 0; i--) {
@@ -765,6 +881,7 @@ function render(time) {
   ctx.fillRect(0, player.y + player.height + 6, WIDTH, 2);
 
   drawUFO();
+  drawLeaves();
   drawExplosions();
 
   if (playerInvincible <= 0 || Math.floor(playerInvincible / 200) % 2 === 0) drawPlayer();
@@ -826,6 +943,15 @@ function render(time) {
     ctx.font = '12px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('ANACONDA!', 10, 46);
+  }
+
+  // Active power-up indicator
+  if (activePowerup.type === 'rapid') {
+    const secs = Math.ceil(activePowerup.timer / 1000);
+    ctx.fillStyle = LEAF_COLORS.rapid;
+    ctx.font = 'bold 13px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`⚡ RAPID FIRE: ${secs}s`, WIDTH / 2, HEIGHT - 14);
   }
 
   // Level up banner
